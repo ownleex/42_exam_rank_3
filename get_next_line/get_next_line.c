@@ -1,52 +1,117 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include "get_next_line.h"
+#include <stdio.h>
+#include <fcntl.h>
 
-char	*ft_strdup(char *src)
+char	*ft_strchr(char *s, int c)
 {
-	int		i;
-	char	*dest;
-
-	i = 0;
-	while (src[i])
-		i++;
-	dest = (char *)malloc(sizeof(char) * (i + 1));
-	if (!dest)
-		return (NULL);
-	i = 0;
-	while (src[i])
+	while (*s)
 	{
-		dest[i] = src[i];
-		i++;
+		if (*s == (char)c)
+			return ((char *)s);
+		s++;
 	}
-	dest[i] = '\0';
-	return (dest);
+	return (NULL);
+}
+
+size_t	ft_strlen(const char *s)
+{
+	size_t	i = 0;
+	
+	while (s[i])
+		i++;
+	return (i);
+}
+
+void	ft_strcpy(char *dst, const char *src)
+{
+	while (*src)	
+		*dst++ = *src++;
+	*dst = '\0';
+}
+
+char	*ft_strdup(const char *src)
+{
+	size_t	len = ft_strlen(src) + 1;
+	char	*dst = malloc(len);
+	
+	if (dst == NULL)
+		return (NULL);
+	ft_strcpy(dst, src);
+	return (dst);
+}
+
+char	*ft_strjoin(char *s1, char const *s2)
+{
+	size_t	s1_len = ft_strlen(s1);
+	size_t	s2_len = ft_strlen(s2);
+	char	*join = malloc((s1_len + s2_len + 1));
+
+	if (!s1 || !s2)
+		return (NULL);
+	if (!join)
+		return (NULL);
+	ft_strcpy(join, s1);
+	ft_strcpy((join + s1_len), s2);
+	free(s1);
+	return (join);
 }
 
 char	*get_next_line(int fd)
 {
-	char	*line;
-	char	buf[BUFFER_SIZE + 1];
-	int		i;
-	int		n;
+	static char	buf[BUFFER_SIZE + 1];
+	char		*line;
+	char		*newline;
+	int			countread;
+	int			to_copy;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
-	line = NULL;
-	i = 0;
-	while ((n = read(fd, &buf[i], 1)) > 0)
+	line = ft_strdup(buf);
+	while (!(newline = ft_strchr(line, '\n')) && (countread = read(fd, buf, BUFFER_SIZE)))
 	{
-		if (buf[i] == '\n' || i == BUFFER_SIZE - 1)
-		{
-			buf[i + 1] = '\0';
-			line = ft_strdup(buf);
-			return (line);
-		}
-		i++;
+		buf[countread] = '\0';
+		line = ft_strjoin(line, buf);
 	}
-	if (i != 0)
+	if (ft_strlen(line) == 0)
+		return (free(line), NULL);
+
+	if (newline != NULL)
 	{
-		buf[i] = '\0';
-		line = ft_strdup(buf);
+		to_copy = newline - line + 1;
+		ft_strcpy(buf, newline + 1);
 	}
+	else
+	{
+		to_copy = ft_strlen(line);
+		buf[0] = '\0';
+	}
+	line[to_copy] = '\0';
 	return (line);
 }
+
+/*
+int	main()
+{
+	int		fd;
+	char	*line;
+
+	// Ouverture du fichier en lecture seule
+	fd = open("test", O_RDONLY);
+	if (fd == -1)
+	{
+		perror("Erreur lors de l'ouverture du fichier");
+		return 1;
+	}
+
+	// Lecture et affichage de chaque ligne du fichier
+	while ((line = get_next_line(fd)) != NULL)
+	{
+		printf("%s", line);
+		free(line);
+	}
+
+	// Fermeture du fichier
+	close(fd);
+	return 0;
+}
+*/
