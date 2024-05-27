@@ -1,8 +1,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "get_next_line.h"
-#include <stdio.h>
-#include <fcntl.h>
+//#include <stdio.h>
+//#include <fcntl.h>
 
 char	*ft_strchr(char *s, int c)
 {
@@ -15,77 +15,74 @@ char	*ft_strchr(char *s, int c)
 	return (NULL);
 }
 
-size_t	ft_strlen(const char *s)
+size_t	ft_strlen(const char *str)
 {
-	size_t	i = 0;
-	
-	while (s[i])
+	size_t		i = 0;
+
+	while (str[i])
 		i++;
 	return (i);
 }
 
-void	ft_strcpy(char *dst, const char *src)
+void	ft_strcpy(char *dest, const char *src)
 {
-	while (*src)	
-		*dst++ = *src++;
-	*dst = '\0';
+	while (*src)
+		*dest++ = *src++;
+	*dest = '\0';
 }
 
 char	*ft_strdup(const char *src)
 {
-	size_t	len = ft_strlen(src) + 1;
-	char	*dst = malloc(len);
-	
-	if (dst == NULL)
+	size_t	len = ft_strlen(src);
+	char	*dest = malloc(len + 1);
+
+	if (!dest)
 		return (NULL);
-	ft_strcpy(dst, src);
-	return (dst);
+	ft_strcpy(dest, src);
+	return (dest);
 }
 
-char	*ft_strjoin(char *s1, char const *s2)
+char	*ft_strjoin(char *s1, const char *s2)
 {
-	size_t	s1_len = ft_strlen(s1);
-	size_t	s2_len = ft_strlen(s2);
-	char	*join = malloc((s1_len + s2_len + 1));
+	size_t	len_s1 = ft_strlen(s1);
+	size_t	len_s2 = ft_strlen(s2);
+	char	*join = malloc(len_s1 + len_s2 + 1);
 
-	if (!s1 || !s2)
-		return (NULL);
-	if (!join)
+	if (!s1 || !s2 || !join)
 		return (NULL);
 	ft_strcpy(join, s1);
-	ft_strcpy((join + s1_len), s2);
+	ft_strcpy(join + len_s1, s2);
 	free(s1);
 	return (join);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	buf[BUFFER_SIZE + 1];
-	char		*line;
-	char		*newline;
-	int			countread;
-	int			to_copy;
+	static char		buff[BUFFER_SIZE + 1];
+	char			*line;
+	char			*newline;
+	int				countread;
+	int				tocopy;
 
-	line = ft_strdup(buf);
-	while (!(newline = ft_strchr(line, '\n')) && (countread = read(fd, buf, BUFFER_SIZE)))
+	line = ft_strdup(buff);
+	while (!(newline = ft_strchr(line, '\n')) && (countread = read(fd, buff, BUFFER_SIZE)) > 0)
 	{
-		buf[countread] = '\0';
-		line = ft_strjoin(line, buf);
+		buff[countread] = '\0';
+		line = ft_strjoin(line, buff);
 	}
 	if (ft_strlen(line) == 0)
 		return (free(line), NULL);
-
-	if (newline != NULL)
+	if (newline)
 	{
-		to_copy = newline - line + 1;
-		ft_strcpy(buf, newline + 1);
+		tocopy = newline - line + 1;
+		ft_strcpy(buff, newline + 1);
 	}
 	else
 	{
-		to_copy = ft_strlen(line);
-		buf[0] = '\0';
+		tocopy = ft_strlen(line);
+		buff[0] = '\0';
 	}
-	line[to_copy] = '\0';
+	line[tocopy] = '\0';
 	return (line);
 }
 
